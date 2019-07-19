@@ -4,6 +4,3 @@
 [submodule "turtlebot"]
 	path = turtlebot
 	url = https://github.com/turtlebot/turtlebot.git
-[submodule "turtlebot_interactions"]
-	path = turtlebot_interactions
-	url = https://github.com/turtlebot/turtlebot_interactions.git
