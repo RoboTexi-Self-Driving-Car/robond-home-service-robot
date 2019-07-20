@@ -63,3 +63,19 @@ Here's a high level overview of how you catkin_ws/src directory should look like
     │   ├── ...
     └──
 ```
+
+## Customization
+
+Tune parameters in 'gmapping_demo.launch'.
+
+Add markers in 'view_navigation.launch'.
+
+## Results
+
+My World built in Gazebo:
+
+![](./results/my_world.png)
+
+My map obtained by SLAM GMapping:
+
+![](./results/my_map.png)
