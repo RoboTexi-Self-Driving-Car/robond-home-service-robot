@@ -30,8 +30,11 @@ private:
 
   visualization_msgs::Marker marker;
 
-  bool reach_pickup;
-  bool reach_dropoff;
+  bool set_pickup;
+  bool set_dropoff;
+  bool set_timer;
+
+  ros::Time timer_start;
 
   bool reach_target(const geometry_msgs::Pose &pos, const geometry_msgs::Pose &target);
 
@@ -48,8 +51,9 @@ AddMarkers::AddMarkers() {
 
   ROS_INFO("Waiting for a goal location");
 
-  reach_pickup = false;
-  reach_dropoff = false;
+  set_pickup = false;
+  set_dropoff = false;
+  set_timer = false;
 
   // Set our initial shape type to be a cube
   uint32_t shape = visualization_msgs::Marker::CUBE;
@@ -99,34 +103,18 @@ void AddMarkers::goalCallback(const geometry_msgs::Pose &msg) {
   goal.orientation.z = msg.orientation.z;
   goal.orientation.w = msg.orientation.w;
 
-  if(!reach_pickup) {
-    ROS_INFO("Robot is on the way to pick up the object");
+  // display the marker in the pickup zone
+  // Set the pose of the marker.
+  marker.pose.position.x = goal.position.x;
+  marker.pose.position.y = goal.position.y;
+  marker.pose.orientation.w = goal.orientation.w;
 
-    // display the marker in the pickup zone
-    // Set the pose of the marker.
-    marker.pose.position.x = goal.position.x;
-    marker.pose.position.y = goal.position.y;
-    marker.pose.orientation.w = goal.orientation.w;
-
-    marker.color.a = 1.0;
-  } else if (!reach_dropoff) {
-    ROS_INFO("Robot is picking up the object");
-
-    // hide the marker in the pickup zone
-    marker.color.a = 0.0;
-
-    // wait 5 seconds to simulate a pickup
-    ros::Duration(5.0).sleep();
+  if(!set_pickup) {
+    ROS_INFO("Obtained the goal position to pick up the object");
+    set_pickup = true;
   } else {
-    ROS_INFO("Drop the object at the drop off point");
-
-    // display the marker in the dropoff zone
-    // Set the pose of the marker.
-    marker.pose.position.x = goal.position.x;
-    marker.pose.position.y = goal.position.y;
-    marker.pose.orientation.w = goal.orientation.w;
-
-    marker.color.a = 1.0;
+    ROS_INFO("Obtained the goal position to drop off the object");
+    set_dropoff = true;
   }
 }
 
@@ -139,12 +127,24 @@ void AddMarkers::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
   odom.orientation.z = msg->pose.pose.orientation.z;
   odom.orientation.w = msg->pose.pose.orientation.w;
 
-  if(!reach_pickup && reach_target(odom, goal)) {
-    reach_pickup = true;
-  }
+  if(!set_pickup && !set_dropoff) {
+    marker.color.a = 0.0;
+  } else if (set_pickup && !set_dropoff) {
+    marker.color.a = 1.0;
+    if(!set_timer && reach_target(odom, goal)) {
+      set_timer = true;
+      timer_start = ros::Time::now();
+    } else if (set_timer && ros::Time::now().toSec() - timer_start.toSec() < 5.0) {
+      ros::Duration(0.02).sleep();
+    } else {
 
-  if(reach_pickup && !reach_dropoff && reach_target(odom, goal)) {
-    reach_dropoff = true;
+    }
+  } else if (set_pickup && set_dropoff) {
+    if(!reach_target(odom, goal)) {
+      marker.color.a = 0.0;
+    } else {
+      marker.color.a = 1.0;
+    }
   }
 }
 
