@@ -79,3 +79,7 @@ My World built in Gazebo:
 My map obtained by SLAM GMapping:
 
 ![](./results/my_map.png)
+
+Home service animation:
+
+![](./results/home_service_animation.gif)
